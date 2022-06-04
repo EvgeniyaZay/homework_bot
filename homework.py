@@ -48,10 +48,10 @@ def get_api_answer(current_timestamp):
     params = {'from_date': timestamp}
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
     try:
-        homework_status = requests.get(
-                                    ENDPOINT,
-                                    headers=headers,
-                                    params=params)
+        homework_status = requests.get(ENDPOINT,
+                                       headers=headers,
+                                       params=params
+                                       )
     except Exception as error:
         message = f'Ошибка запроса: {homework_status.status_code}'
         logging.error(message)
@@ -85,7 +85,8 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Извлекает из информации о конкретной домашней работе
+    """
+    Извлекает из информации о конкретной домашней работе
     статус этой работы.
     """
     if 'homework_name' not in homework:
@@ -101,7 +102,7 @@ def parse_status(homework):
 
 
 def check_tokens():
-    """Проверяет доступность переменных окружения"""
+    """Проверяет доступность переменных окружения."""
     env_params = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
     for env_var in env_params:
         if env_var is None:
