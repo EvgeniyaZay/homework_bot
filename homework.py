@@ -33,7 +33,7 @@ logging.basicConfig(
 
 
 def send_message(bot, message):
-    """Отправляет сообщение в Телеграм бот"""
+    """Отправляет сообщение в Телеграм бот."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.info('Сообщение успешно доставлено')
@@ -43,12 +43,15 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
-    """Делает запрос к единственному эндпоинту API-сервис"""
+    """Делает запрос к единственному эндпоинту API-сервис."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
     try:
-        homework_status = requests.get(ENDPOINT, headers=headers, params=params)
+        homework_status = requests.get(
+                                    ENDPOINT,
+                                    headers=headers,
+                                    params=params)
     except Exception as error:
         message = f'Ошибка запроса: {homework_status.status_code}'
         logging.error(message)
@@ -65,7 +68,7 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-    """Проверяет API на корректность"""
+    """Проверяет API на корректность."""
     if type(response) is not dict:
         raise TypeError('Ответ API отличен от словаря')
     try:
@@ -82,7 +85,9 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Извлекает из информации о конкретной домашней работе статус этой работы"""
+    """Извлекает из информации о конкретной домашней работе
+    статус этой работы.
+    """
     if 'homework_name' not in homework:
         raise KeyError('отсутсвует ключ словаря "homework_name"')
     if 'status' not in homework:
