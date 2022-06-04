@@ -1,9 +1,9 @@
 import logging
+import os
+import requests
 import time
 import telegram
-import requests
 from http import HTTPStatus
-import os
 
 from dotenv import load_dotenv
 
