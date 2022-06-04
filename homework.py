@@ -85,8 +85,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Извлекает из информации о домашней работе статус этой работы.
-    """
+    """Извлекает из информации о домашней работе статус этой работы."""
     if 'homework_name' not in homework:
         raise KeyError('отсутсвует ключ словаря "homework_name"')
     if 'status' not in homework:
