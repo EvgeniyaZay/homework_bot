@@ -38,18 +38,16 @@ def send_message(bot, message):
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.info('Сообщение успешно доставлено')
     except telegram.TelegramError as error:
-        message = f'Сообщение не доставлено: {error}'
-        logging.error(message)
+        raise SystemError(f'Сообщение не доставлено: {error}')
 
 
 def get_api_answer(current_timestamp):
     """Делает запрос к единственному эндпоинту API-сервис."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
-    headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
     try:
         homework_status = requests.get(ENDPOINT,
-                                       headers=headers,
+                                       headers=HEADERS,
                                        params=params
                                        )
     except Exception as error:
@@ -58,38 +56,28 @@ def get_api_answer(current_timestamp):
         return error
     if homework_status.status_code != HTTPStatus.OK:
         status_code = homework_status.status_code
-        logging.error(f'Ошибка: {status_code}')
         raise Exception(f'Ошибка: {status_code}')
-    try:
-        return homework_status.json()
-    except ValueError:
-        logging.error('Ошибка ответа из формата json')
-        raise ValueError('Ошибка ответа из формата json')
+    return homework_status.json()
 
 
 def check_response(response):
     """Проверяет API на корректность."""
-    if type(response) is not dict:
-        raise TypeError('Ответ API отличен от словаря')
     try:
         homework_list = response['homeworks']
     except KeyError:
-        logging.error('Ошибка словаря по ключу homeworks')
-        raise KeyError('Ошибка словаря по ключу homeworks')
-    try:
-        homework = homework_list[0]
-    except IndexError:
-        logging.error('Список домашек пуст')
+        raise KeyError('Ошибка словаря по ключу "homeworks"')
+    if homework_list is None or not isinstance(homework_list, list):
+        raise TypeError('Ответ API отличен от словаря')
+    if len(homework_list) == 0:
         raise IndexError('Список домашек пуст')
-    return homework
-
+    return homework_list
 
 def parse_status(homework):
     """Извлекает из информации о домашней работе статус этой работы."""
     if 'homework_name' not in homework:
         raise KeyError('отсутсвует ключ словаря "homework_name"')
     if 'status' not in homework:
-        raise Exception('Отсутсвует ключ словаря "homework_status"')
+        raise KeyError('Отсутсвует ключ словаря "homework_status"')
     homework_name = homework['homework_name']
     homework_status = homework['status']
     if homework_status not in HOMEWORK_STATUSES:
@@ -100,13 +88,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверяет доступность переменных окружения."""
-    env_params = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
-    for env_var in env_params:
-        if env_var is None:
-            logging.critical('Всё упало')
-            return False
-    logging.info('Всё прошло успешно')
-    return True
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
