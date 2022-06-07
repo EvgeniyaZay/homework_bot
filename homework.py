@@ -7,6 +7,8 @@ from http import HTTPStatus
 
 from dotenv import load_dotenv
 
+import exceptions
+
 load_dotenv()
 
 
@@ -50,13 +52,13 @@ def get_api_answer(current_timestamp):
                                        headers=HEADERS,
                                        params=params
                                        )
-    except Exception as error:
+    except exceptions.ExceptionApiStausCode as error:
         message = f'Ошибка запроса: {homework_status.status_code}'
         logging.error(message)
         return error
     if homework_status.status_code != HTTPStatus.OK:
         status_code = homework_status.status_code
-        raise Exception(f'Ошибка: {status_code}')
+        raise exceptions.ExceptionApiStausCode(f'Ошибка: {status_code}')
     return homework_status.json()
 
 
@@ -81,7 +83,7 @@ def parse_status(homework):
     homework_name = homework['homework_name']
     homework_status = homework['status']
     if homework_status not in HOMEWORK_STATUSES:
-        raise Exception(f'Некорректный статус: {homework_status}')
+        raise exceptions.UnknownStatusHomeWork(f'Некорректный статус: {homework_status}')
     verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -95,18 +97,34 @@ def main():
     """Основная логика работы бота."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time()) - RETRY_TIME
+    status_previos = None
+    error_status = None
+
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            current_timestamp = response.get('current_date')
-            message = parse_status(check_response(response))
-            send_message(bot, message)
-            time.sleep(RETRY_TIME)
-        except Exception as error:
-            message = str(error)
+        except exceptions.IncorrectAPIResponse as error:
+            if str(error) != error_status:
+                send_message(bot, error)
             logging.error(error)
-            send_message(bot, message)
-        time.sleep(RETRY_TIME)
+            time.sleep(RETRY_TIME)
+            continue
+        try:
+            homeworks = check_response(response)
+            homeworks_status = homeworks.get('status')
+            if homeworks_status != status_previos:
+                message = parse_status(homeworks[0])
+                send_message(bot, message)
+            else:
+                logging.debug('Обновляшки нет')
+            time.sleep(RETRY_TIME)
+
+        except Exception as error:
+            message = f'Ошибка в проге: {error}'
+            if error_status != str(error):
+                send_message(bot, message)
+            logging.error(message)
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
