@@ -83,7 +83,9 @@ def parse_status(homework):
     homework_name = homework['homework_name']
     homework_status = homework['status']
     if homework_status not in HOMEWORK_STATUSES:
-        raise exceptions.UnknownStatusHomeWork(f'Некорректный статус: {homework_status}')
+        raise exceptions.UnknownStatusHomeWork(
+            f'Некорректный статус: {homework_status}'
+        )
     verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
