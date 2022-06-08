@@ -97,14 +97,14 @@ def main():
     """Основная логика работы бота."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time()) - RETRY_TIME
-    status_previos = None
     error_status = None
 
     while True:
         try:
             response = get_api_answer(current_timestamp)
+            message = parse_status(check_response(response))
         except exceptions.IncorrectAPIResponse as error:
-            if str(error) != error_status:
+            if message == str(error):
                 send_message(bot, error)
             logging.error(error)
             time.sleep(RETRY_TIME)
@@ -112,7 +112,7 @@ def main():
         try:
             homeworks = check_response(response)
             homeworks_status = homeworks.get('status')
-            if homeworks_status != status_previos:
+            if homeworks_status:
                 message = parse_status(homeworks[0])
                 send_message(bot, message)
             else:
@@ -121,7 +121,8 @@ def main():
 
         except Exception as error:
             message = f'Ошибка в проге: {error}'
-            if error_status != str(error):
+            if error_status != message:
+                error_status = message
                 send_message(bot, message)
             logging.error(message)
             time.sleep(RETRY_TIME)
