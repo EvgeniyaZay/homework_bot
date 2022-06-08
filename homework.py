@@ -74,6 +74,7 @@ def check_response(response):
         raise IndexError('Список домашек пуст')
     return homework_list
 
+
 def parse_status(homework):
     """Извлекает из информации о домашней работе статус этой работы."""
     if 'homework_name' not in homework:
