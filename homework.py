@@ -39,6 +39,7 @@ def send_message(bot, message):
     bot.send_message(TELEGRAM_CHAT_ID, message)
     logging.info('Сообщение успешно доставлено')
 
+
 def get_api_answer(current_timestamp):
     """Делает запрос к единственному эндпоинту API-сервис."""
     timestamp = current_timestamp or int(time.time())
