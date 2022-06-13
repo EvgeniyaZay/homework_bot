@@ -36,12 +36,8 @@ logging.basicConfig(
 
 def send_message(bot, message):
     """Отправляет сообщение в Телеграм бот."""
-    try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-        logging.info('Сообщение успешно доставлено')
-    except telegram.TelegramError as error:
-        raise SystemError(f'Сообщение не доставлено: {error}')
-
+    bot.send_message(TELEGRAM_CHAT_ID, message)
+    logging.info('Сообщение успешно доставлено')
 
 def get_api_answer(current_timestamp):
     """Делает запрос к единственному эндпоинту API-сервис."""
@@ -52,10 +48,10 @@ def get_api_answer(current_timestamp):
                                        headers=HEADERS,
                                        params=params
                                        )
-    except exceptions.ExceptionApiStausCode as error:
+    except exceptions.ExceptionApiStausCode:
         message = f'Ошибка запроса: {homework_status.status_code}'
         logging.error(message)
-        return error
+        raise exceptions.ExceptionApiStausCode(message)
     if homework_status.status_code != HTTPStatus.OK:
         status_code = homework_status.status_code
         raise exceptions.ExceptionApiStausCode(f'Ошибка: {status_code}')
@@ -64,12 +60,11 @@ def get_api_answer(current_timestamp):
 
 def check_response(response):
     """Проверяет API на корректность."""
-    try:
-        homework_list = response['homeworks']
-    except KeyError:
-        raise KeyError('Ошибка словаря по ключу "homeworks"')
+    homework_list = response['homeworks']
     if homework_list is None or not isinstance(homework_list, list):
         raise TypeError('Ответ API отличен от словаря')
+    if homework_list is None or not isinstance(homework_list, list):
+        raise TypeError('Ошибка словаря по ключу "homeworks"')
     if len(homework_list) == 0:
         raise IndexError('Список домашек пуст')
     return homework_list
@@ -100,7 +95,6 @@ def main():
     """Основная логика работы бота."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time()) - RETRY_TIME
-    error_status = None
 
     while True:
         try:
@@ -124,10 +118,12 @@ def main():
 
         except Exception as error:
             message = f'Ошибка в проге: {error}'
-            if error_status != message:
-                error_status = message
-                send_message(bot, message)
-            logging.error(message)
+            logging.exception(message)
+            try:
+                bot.send_message(TELEGRAM_CHAT_ID, message)
+            except Exception as error:
+                message = f'Сообщение не доставлено: {error}'
+                logging.exception(message)
             time.sleep(RETRY_TIME)
 
 
