@@ -50,7 +50,9 @@ def get_api_answer(current_timestamp):
                                        params=params
                                        )
     except exceptions.ExceptionApiStausCode:
-        raise exceptions.ExceptionApiStausCode(f'Ошибка запроса: {homework_status.status_code}')
+        raise exceptions.ExceptionApiStausCode(
+            f'Ошибка запроса: {homework_status.status_code}'
+        )
     if homework_status.status_code != HTTPStatus.OK:
         status_code = homework_status.status_code
         raise exceptions.ExceptionApiStausCode(f'Ошибка: {status_code}')
