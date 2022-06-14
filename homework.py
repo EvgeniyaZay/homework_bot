@@ -105,7 +105,6 @@ def main():
             if message == str(error):
                 send_message(bot, error)
             logging.error(error)
-            time.sleep(RETRY_TIME)
             continue
         try:
             homeworks = check_response(response)
@@ -115,7 +114,6 @@ def main():
                 send_message(bot, message)
             else:
                 logging.debug('Обновляшки нет')
-            time.sleep(RETRY_TIME)
 
         except Exception as error:
             message = f'Ошибка в проге: {error}'
@@ -125,7 +123,11 @@ def main():
             except Exception as error:
                 message = f'Сообщение не доставлено: {error}'
                 logging.exception(message)
+
+        finally:
+            current_timestamp = int(time.time())
             time.sleep(RETRY_TIME)
+
 
 
 if __name__ == '__main__':
