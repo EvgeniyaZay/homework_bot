@@ -95,12 +95,12 @@ def check_tokens():
 def main():
     """Основная логика работы бота."""
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time()) - RETRY_TIME
+    current_timestamp = int(time.time()) - 86400 * 10
 
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            message = parse_status(check_response(response))
+            message = check_response(response)
         except exceptions.IncorrectAPIResponse as error:
             if message == str(error):
                 send_message(bot, error)
@@ -125,7 +125,7 @@ def main():
                 logging.exception(message)
 
         finally:
-            current_timestamp = int(time.time())
+            # current_timestamp = int(time.time())
             time.sleep(RETRY_TIME)
 
 
